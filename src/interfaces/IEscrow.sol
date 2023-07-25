@@ -8,4 +8,12 @@ interface IEscrow {
         uint256 amount,
         uint256 length
     ) external returns (bytes32);
+
+    function claim(
+        address token,
+        address payee,
+        address payer,
+        uint256 nonce,
+        bytes memory signatures
+    ) external;
 }
