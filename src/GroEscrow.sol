@@ -23,6 +23,10 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
 
     constructor() Ownable() {}
 
+    /// @notice Returns the hash of the escrow position
+    /// @param payee The payee address
+    /// @param payer The payer address
+    /// @param nonce The nonce of the deposit
     function hashEscrowPosition(
         address payee,
         address payer,
@@ -31,6 +35,11 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
         return keccak256(abi.encode(payee, payer, nonce));
     }
 
+    /// @notice Deposits the provided amount of tokens into escrow
+    /// @param token The token address
+    /// @param payee The payee address
+    /// @param amount The amount of tokens to deposit
+    /// @param length The length of the escrow in seconds
     function deposit(
         address token,
         address payee,
@@ -61,8 +70,44 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
         return position;
     }
 
+    /// @notice Returns the deposit information for the provided position
+    /// @param payee The payee address
+    /// @param payer The payer address
+    /// @param nonce The nonce of the deposit
+    function getDeposit(
+        address payee,
+        address payer,
+        uint256 nonce
+    )
+        public
+        view
+        returns (
+            bool claimed,
+            address token,
+            uint256 amount,
+            uint256 start,
+            uint256 length
+        )
+    {
+        bytes32 position = hashEscrowPosition(payee, payer, nonce);
+        Escrow memory escrow = _deposits[position];
+        return (
+            escrow.claimed,
+            escrow.token,
+            escrow.amount,
+            escrow.start,
+            escrow.length
+        );
+    }
+
     /// TODO: Implement arbiter's logic
     /// TODO:
+    /// @notice Claims the escrowed funds
+    /// @param token The token address
+    /// @param payee The payee address
+    /// @param payer The payer address
+    /// @param nonce The nonce of the deposit
+    /// @param signatures The signatures of the payee and the payer OR the arbiter
     function claim(
         address token,
         address payee,
@@ -95,10 +140,15 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
         emit Claimed(payee, escrow.token, escrow.amount);
     }
 
-    /// @notice Checks if the provided signature is valid for the provided data
-    /// @notice and that is signed by either the sender or the payee
     /// TODO: Implement smart contract signatures check
     /// TODO: EIP1271 support
+    /// @notice Checks if the provided signature is valid for the provided data
+    /// @notice and that is signed by either the sender or the payee
+    /// @param token The token address
+    /// @param payee The payee address
+    /// @param payer The payer address
+    /// @param nonce The nonce of the deposit
+    /// @param signatures The signatures of the payee and the payer OR the arbiter
     function _checkSignatures(
         address token,
         address payee,

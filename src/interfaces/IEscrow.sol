@@ -16,4 +16,25 @@ interface IEscrow {
         uint256 nonce,
         bytes memory signatures
     ) external;
+
+    function getDeposit(
+        address payee,
+        address payer,
+        uint256 nonce
+    )
+        external
+        view
+        returns (
+            bool claimed,
+            address token,
+            uint256 amount,
+            uint256 start,
+            uint256 length
+        );
+
+    function hashEscrowPosition(
+        address payee,
+        address payer,
+        uint256 nonce
+    ) external pure returns (bytes32);
 }
