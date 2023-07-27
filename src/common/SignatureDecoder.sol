@@ -19,30 +19,14 @@ abstract contract SignatureDecoder {
         );
 
     function signatureSplit(
-        bytes memory packedSignatures,
-        uint256 position
+        bytes memory signatures,
+        uint256 pos
     ) public pure returns (uint8 v, bytes32 r, bytes32 s) {
-        uint256 signatureSize = 65; // Size of a single signature (v + r + s) in bytes
-        require(
-            packedSignatures.length >= (position + 1) * signatureSize,
-            "Invalid position"
-        );
-
         assembly {
-            // Load the signature data from the packedSignatures array
-            let dataPointer := add(
-                packedSignatures,
-                mul(signatureSize, position)
-            )
-
-            // Load v (1 byte)
-            v := byte(0, mload(dataPointer))
-
-            // Load r (32 bytes, starting from 33rd byte)
-            r := mload(add(dataPointer, 0x21))
-
-            // Load s (32 bytes, starting from 65th byte)
-            s := mload(add(dataPointer, 0x41))
+            let signaturePos := mul(0x41, pos)
+            r := mload(add(signatures, add(signaturePos, 0x20)))
+            s := mload(add(signatures, add(signaturePos, 0x40)))
+            v := and(mload(add(signatures, add(signaturePos, 0x41))), 0xff)    
         }
     }
 

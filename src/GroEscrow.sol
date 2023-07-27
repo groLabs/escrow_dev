@@ -5,7 +5,6 @@ import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IEscrow.sol";
 import "./common/SignatureDecoder.sol";
-import {console2} from "../lib/forge-std/src/console2.sol";
 
 contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
     struct Escrow {
@@ -169,8 +168,6 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
 
         address signer1 = ecrecover(messageHash, v1, r1, s1);
         address signer2 = ecrecover(messageHash, v2, r2, s2);
-        console2.log(signer1);
-        console2.log(signer2);
         return
             (signer1 == payee || signer1 == payer) &&
             (signer2 == payee || signer2 == payer);
