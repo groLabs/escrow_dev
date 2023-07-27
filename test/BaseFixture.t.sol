@@ -42,10 +42,10 @@ contract BaseFixture is Test {
         uint256 pkey
     ) public returns (uint8 v, bytes32 r, bytes32 s) {
         bytes32 domainSeparator = keccak256(
-            abi.encode(escrow.DOMAIN_TYPEHASH, block.chainid, address(escrow))
+            abi.encode(escrow.DOMAIN_TYPEHASH(), block.chainid, address(escrow))
         );
         bytes32 structHash = keccak256(
-            abi.encode(escrow.CLAIM_TYPEHASH, token, payee, payer, nonce)
+            abi.encode(escrow.CLAIM_TYPEHASH(), token, payee, payer, nonce)
         );
         bytes32 messageHash = keccak256(
             abi.encodePacked("\x19\x01", domainSeparator, structHash)

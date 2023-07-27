@@ -166,11 +166,8 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
         );
         (uint8 v1, bytes32 r1, bytes32 s1) = signatureSplit(signatures, 0);
         (uint8 v2, bytes32 r2, bytes32 s2) = signatureSplit(signatures, 1);
-
         address signer1 = ecrecover(messageHash, v1, r1, s1);
         address signer2 = ecrecover(messageHash, v2, r2, s2);
-        console2.log(signer1);
-        console2.log(signer2);
         return
             (signer1 == payee || signer1 == payer) &&
             (signer2 == payee || signer2 == payer);
