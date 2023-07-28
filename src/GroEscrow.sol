@@ -5,6 +5,7 @@ import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IEscrow.sol";
 import "./common/SignatureDecoder.sol";
+import {Errors} from "./common/Errors.sol";
 
 contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
     struct Escrow {
@@ -120,18 +121,19 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
         require(payer != address(0), "ZERO_ADDRESS");
         // Check that the signatures are valid
         if (!_checkSignatures(token, payee, payer, nonce, signatures)) {
-            revert("INVALID_SIGNATURES");
+            revert Errors.InvalidSig();
         }
         // Do some checks first, such as the escrow exists and is ready to be claimed
         bytes32 escrowPosition = hashEscrowPosition(payee, payer, nonce);
 
         Escrow memory escrow = _deposits[escrowPosition];
+
         if (escrow.amount == 0 || escrow.claimed) {
-            revert("ESCROW_CLAIMED or ESCROW_DOES_NOT_EXIST");
+            revert Errors.EscrowClaimedOrDoesntExist();
         }
         // Check that the escrow is ready to be claimed
         if (escrow.start + escrow.length > block.timestamp) {
-            revert("TOO_EARLY");
+            revert Errors.TooEarlyToClaim();
         }
         // Mark the escrow as claimed
         _deposits[escrowPosition].claimed = true;
@@ -157,11 +159,11 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
         bytes memory signatures
     ) internal view returns (bool) {
         bytes32 messageHash = encodeMessage(
+            CLAIM_TYPEHASH,
             token,
             payee,
             payer,
-            nonce,
-            CLAIM_TYPEHASH
+            nonce
         );
         (uint8 v1, bytes32 r1, bytes32 s1) = signatureSplit(signatures, 0);
         (uint8 v2, bytes32 r2, bytes32 s2) = signatureSplit(signatures, 1);
