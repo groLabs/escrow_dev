@@ -126,6 +126,7 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
         bytes32 escrowPosition = hashEscrowPosition(payee, payer, nonce);
 
         Escrow memory escrow = _deposits[escrowPosition];
+
         if (escrow.amount == 0 || escrow.claimed) {
             revert("ESCROW_CLAIMED or ESCROW_DOES_NOT_EXIST");
         }

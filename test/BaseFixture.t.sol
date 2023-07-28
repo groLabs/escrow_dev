@@ -51,8 +51,6 @@ contract BaseFixture is Test {
             abi.encodePacked("\x19\x01", domainSeparator, structHash)
         );
         (v, r, s) = vm.sign(pkey, messageHash);
-        console2.log('messageHash');
-        console2.logBytes32(messageHash);
         assertTrue(
             payee == ecrecover(messageHash, v, r, s) ||
                 payer == ecrecover(messageHash, v, r, s)
@@ -68,14 +66,9 @@ contract BaseFixture is Test {
         bytes32 r2,
         bytes32 s2
     ) public pure returns (bytes memory) {
-        bytes memory packedSignatures = new bytes(65 * 2);
-
         // Combine signatures using abi.encodePacked
         bytes memory signature1 = abi.encodePacked(r1, s1, v1);
         bytes memory signature2 = abi.encodePacked(r2, s2, v2);
-        console2.log('\npackedSig\n');
-        console2.logBytes(signature1);
-        console2.logBytes(signature2);
 
         return abi.encodePacked(signature1, signature2);
     }

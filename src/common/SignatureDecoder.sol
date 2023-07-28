@@ -26,7 +26,7 @@ abstract contract SignatureDecoder {
             let signaturePos := mul(0x41, pos)
             r := mload(add(signatures, add(signaturePos, 0x20)))
             s := mload(add(signatures, add(signaturePos, 0x40)))
-            v := and(mload(add(signatures, add(signaturePos, 0x41))), 0xff)    
+            v := and(mload(add(signatures, add(signaturePos, 0x41))), 0xff)
         }
     }
 

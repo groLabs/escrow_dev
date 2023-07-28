@@ -49,13 +49,14 @@ contract TestGroEscrow is BaseFixture {
         vm.label(jake, "Jake");
         (address jill, uint256 jillKey) = makeAddrAndKey("1338");
         vm.label(jill, "Jill");
-        console2.log('jake %s jill %s', jake, jill);
 
+        uint256 jillBalanceSnapshot = usdc.balanceOf(jill);
+        assertEq(jillBalanceSnapshot, 0);
         vm.startPrank(jake);
         usdc.faucet(depositAmnt);
         usdc.approve(address(escrow), depositAmnt);
-        // Alice wants to give X USDC to Bob and put it into escrow
-        escrow.deposit(address(usdc), bob, depositAmnt, depositLength);
+        // Jake wants to give X USDC to Jill and put it into escrow
+        escrow.deposit(address(usdc), jill, depositAmnt, depositLength);
         vm.stopPrank();
 
         // Time passes and Bob wants to claim his USDC
@@ -64,37 +65,31 @@ contract TestGroEscrow is BaseFixture {
         vm.prank(jake);
         (uint8 v, bytes32 r, bytes32 s) = signClaimMessage(
             address(usdc),
-            jake,
             jill,
+            jake,
             0,
             jakeKey
         );
-        console2.log('v1', v);
-        console2.logBytes32(r);  
-        console2.logBytes32(s);  
-        console2.log('sig1');
-        console2.logBytes(abi.encodePacked(r, s, v));
         vm.prank(jill);
         // Jill agrees with Jake and signs the claim message as well
         (uint8 v2, bytes32 r2, bytes32 s2) = signClaimMessage(
             address(usdc),
-            jake,
             jill,
+            jake,
             0,
             jillKey
         );
-        console2.log('v2', v2);
-        console2.logBytes32(r2);  
-        console2.logBytes32(s2);  
-        console2.log('sig2');
-        console2.logBytes(abi.encodePacked(r2, s2, v2));
+
         // Encode signatures into messages and append into one bytes array
         bytes memory signatures = packSignatures(v, r, s, v2, r2, s2);
         // Jill wants to claim the USDC after time passed and both parties agreed on the claim
         vm.prank(jill);
+        escrow.claim(address(usdc), jill, jake, 0, signatures);
+        // Make sure USDC balance increased for Jill
+        assertEq(usdc.balanceOf(jill), depositAmnt);
 
-        //        console2.log(jake);
-        //        console2.log(jill);
-        escrow.claim(address(usdc), jake, jill, 0, signatures);
+        // Make sure position was claimed
+        (bool claimed, , , , ) = escrow.getDeposit(jill, jake, 0);
+        assertTrue(claimed);
     }
 }
