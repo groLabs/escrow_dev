@@ -20,6 +20,8 @@ contract TestGroEscrow is BaseFixture {
         vm.startPrank(alice);
         usdc.faucet(depositAmnt);
         uint256 balanceSnapshot = usdc.balanceOf(alice);
+        // Make sure escrow balance is 0 usdc before deposit
+        assertEq(usdc.balanceOf(address(escrow)), 0);
         // Approve the escrow to spend USDC
         usdc.approve(address(escrow), depositAmnt);
         // Alice wants to give X USDC to Bob and put it into escrow
@@ -41,6 +43,8 @@ contract TestGroEscrow is BaseFixture {
         assertEq(amount, depositAmnt);
         assertEq(start, block.timestamp);
         assertEq(length, 182 days);
+        // Make sure escrow balance increased
+        assertEq(usdc.balanceOf(address(escrow)), depositAmnt);
     }
 
     function testDepositAndClaim(
