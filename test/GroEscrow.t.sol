@@ -222,4 +222,56 @@ contract TestGroEscrow is BaseFixture {
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSig.selector));
         escrow.claim(address(usdc), jill, jake, 0, signatures);
     }
+
+    /// @notice If try to claim multiple times, it should revert
+    function testDepositAndClaimMultipleTimes() public {
+        uint256 depositAmnt = 1000e6;
+        uint256 depositLength = 100;
+        // Make new addresses and extract pks
+        (address jake, uint256 jakeKey) = makeAddrAndKey("1337");
+        vm.label(jake, "Jake");
+        (address jill, uint256 jillKey) = makeAddrAndKey("1338");
+        vm.label(jill, "Jill");
+
+        uint256 jillBalanceSnapshot = usdc.balanceOf(jill);
+        assertEq(jillBalanceSnapshot, 0);
+        vm.startPrank(jake);
+        usdc.faucet(depositAmnt);
+        usdc.approve(address(escrow), depositAmnt);
+        // Jake wants to give X USDC to Jill and put it into escrow
+        escrow.deposit(address(usdc), jill, depositAmnt, depositLength);
+        vm.stopPrank();
+
+        // Time passes and Jill wants to claim his USDC
+        vm.warp(block.timestamp + depositLength + 1);
+        // Jake signs the claim message
+        (uint8 v, bytes32 r, bytes32 s) = signClaimMessage(
+            address(usdc),
+            jill,
+            jake,
+            0,
+            jakeKey
+        );
+        // Jill agrees with Jake and signs the claim message as well
+        (uint8 v2, bytes32 r2, bytes32 s2) = signClaimMessage(
+            address(usdc),
+            jill,
+            jake,
+            0,
+            jillKey
+        );
+
+        // Encode signatures into messages and append into one bytes array
+        bytes memory signatures = packSignatures(v, r, s, v2, r2, s2);
+        // Jill wants to claim the USDC after time passed and both parties agreed on the claim
+        vm.prank(jill);
+        escrow.claim(address(usdc), jill, jake, 0, signatures);
+        // Try to claim again and it should revert
+        vm.startPrank(jill);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.EscrowClaimedOrDoesntExist.selector)
+        );
+        escrow.claim(address(usdc), jill, jake, 0, signatures);
+        vm.stopPrank();
+    }
 }
