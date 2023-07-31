@@ -19,11 +19,53 @@ contract GroEscrow is IEscrow, SignatureDecoder, Ownable {
     mapping(bytes32 => Escrow) private _deposits;
     mapping(address => uint256) private _depositNonce;
 
+    address[] public arbiters;
+
     event Deposited(address indexed payee, address token, uint256 amount);
     event Claimed(address indexed payee, address token, uint256 amount);
+    event ArbiterAdded(address indexed arbiter);
+    event ArbiterRemoved(address indexed arbiter);
 
     constructor() Ownable() {}
 
+    ////////////////////////////////////////////
+    /////////// ADMIN FUNCTIONS ////////////////
+    ////////////////////////////////////////////
+    /// @notice Adds an arbiter to the list of arbiters
+    /// @param arbiter The address of the arbiter
+    function addArbiter(address arbiter) external onlyOwner {
+        require(arbiter != address(0), "ZERO_ADDRESS");
+        // Check if the arbiter is already in the list
+        for (uint256 i = 0; i < arbiters.length; i++) {
+            if (arbiters[i] == arbiter) {
+                revert Errors.AlreadyArbiter();
+            }
+        }
+        arbiters.push(arbiter);
+        emit ArbiterAdded(arbiter);
+    }
+
+    /// @notice Removes an arbiter from the list of arbiters
+    /// @param arbiter The address of the arbiter
+    function removeArbiter(address arbiter) external onlyOwner {
+        require(arbiter != address(0), "ZERO_ADDRESS");
+        for (uint256 i = 0; i < arbiters.length; i++) {
+            if (arbiters[i] == arbiter) {
+                delete arbiters[i];
+                emit ArbiterRemoved(arbiter);
+                return;
+            }
+        }
+    }
+
+    /// @notice Returns the list of arbiters
+    function getArbiters() external view returns (address[] memory) {
+        return arbiters;
+    }
+
+    ////////////////////////////////////////////
+    /////////// CORE FUNCTIONALITY /////////////
+    ////////////////////////////////////////////
     /// @notice Returns the hash of the escrow position
     /// @param payee The payee address
     /// @param payer The payer address

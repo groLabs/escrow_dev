@@ -2,6 +2,12 @@
 pragma solidity ^0.8.13;
 
 interface IEscrow {
+    function addArbiter(address arbiter) external;
+
+    function removeArbiter(address arbiter) external;
+
+    function getArbiters() external view returns (address[] memory);
+
     function deposit(
         address token,
         address payee,

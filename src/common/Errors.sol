@@ -5,4 +5,7 @@ library Errors {
     error EscrowClaimedOrDoesntExist();
     error TooEarlyToClaim(); // 0xd71d60b5
     error InvalidSig();
+
+    // Admin
+    error AlreadyArbiter();
 }
